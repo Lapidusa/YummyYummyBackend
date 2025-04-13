@@ -1,0 +1,13 @@
+fastapi~=0.115.8
+uvicorn~=0.34.0
+sqlalchemy~=2.0.38
+asyncpg
+pydantic~=2.10.6
+alembic~=1.14.1
+pydantic-settings~=2.8.0
+psycopg2-binary
+greenlet
+httpx~=0.28.1
+PyJWT~=1.7.1
+pip~=25.0.1
+GeoAlchemy2~=0.17.1
