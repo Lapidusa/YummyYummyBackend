@@ -1,7 +1,8 @@
 from uuid import UUID
-from typing import Sequence, List
+from typing import List
 
 from asyncpg import Polygon
+from geoalchemy2.shape import from_shape
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -35,22 +36,17 @@ class StoreService:
       start_delivery_time=store_data.start_delivery_time,
       end_delivery_time=store_data.end_delivery_time,
       phone_number=store_data.phone_number,
-      min_order_price= store_data.min_order_price
+      min_order_price= store_data.min_order_price,
+      city_id= store_data.city_id
     )
+    if store_data.area:
+      # Создаем полигон из координат
+      polygon = Polygon(store_data.area)
+      new_store.area = from_shape(polygon, srid=4326)  # Укажите SRID, если необходимо
     db.add(new_store)
     await db.commit()
     await db.refresh(new_store)
 
-    for zone_data in store_data.delivery_zones:
-      # Преобразуем координаты в полигон
-      polygon = Polygon(zone_data.coordinates)
-      delivery_zone = DeliveryZone(
-        name=zone_data.name,
-        area=from_shape(polygon, srid=4326),  # Преобразуем в формат GeoAlchemy
-        store_id=store.id,
-      )
-      db.add(delivery_zone)
-    await db.commit()
     return new_store
 
   @staticmethod

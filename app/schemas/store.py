@@ -14,8 +14,10 @@ class Store(BaseModel):
   start_delivery_time: time = Field(..., description="Начало времени доставки")  # Время начала доставки
   end_delivery_time: time = Field(..., description="Конец времени доставки")  # Время окончания доставки
   phone_number: str = Field(..., description="Номер телефона магазина")  # Номер телефона
+  min_order_price: int = Field(..., description="Минимальная сумма для заказа")
   categories: List[Category] = Field(default_factory=list, description="Список связанных категорий")  # Связанные категории
-  city: City = Field(..., description="Город, к которому принадлежит магазин")  # Город, связанный с магазином
+  city_id: UUID  # ID города
+  area: List[List[float]]
 
   class Config:
     from_attributes = True
@@ -27,6 +29,8 @@ class CreateStore(BaseModel):
   start_delivery_time: time
   end_delivery_time: time
   phone_number: str
+  area: List[List[float]]
+  city_id: UUID
 
 class UpdateStore(BaseModel):
   id: UUID
@@ -36,3 +40,5 @@ class UpdateStore(BaseModel):
   start_delivery_time: time
   end_delivery_time: time
   phone_number: str
+  area: List[List[float]]
+  city_id: UUID
