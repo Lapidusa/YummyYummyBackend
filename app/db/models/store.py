@@ -20,7 +20,8 @@ class Store(Base):
   min_order_price = Column(Integer, nullable=False, default=0)  # Минимальная сумма заказа
   created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))  # Дата создания записи
   updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))  # Дата обновления записи
-  area = Column(Geometry('POLYGON'), nullable=False)
+  area = Column(Geometry('POLYGON'), nullable=False)  # Полигон
+  point = Column(Geometry('POINT'), nullable=False)  # Точка магазина
   city_id = Column(UUID(as_uuid=True), ForeignKey('cities.id'), nullable=False)  # Связь с городом
   city = relationship("City", back_populates="stores")  # Обратная связь с моделью City
   categories = relationship("Category", secondary=store_categories, back_populates="stores")

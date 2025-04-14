@@ -17,7 +17,9 @@ class Store(BaseModel):
   min_order_price: int = Field(..., description="Минимальная сумма для заказа")
   categories: List[Category] = Field(default_factory=list, description="Список связанных категорий")  # Связанные категории
   city_id: UUID  # ID города
+
   area: List[List[float]]
+  point: List[float]
 
   class Config:
     from_attributes = True
@@ -30,6 +32,7 @@ class CreateStore(BaseModel):
   end_delivery_time: time
   phone_number: str
   area: List[List[float]]
+  point: List[float]
   city_id: UUID
 
 class UpdateStore(BaseModel):
@@ -41,4 +44,5 @@ class UpdateStore(BaseModel):
   end_delivery_time: time
   phone_number: str
   area: List[List[float]]
+  point: List[float]
   city_id: UUID

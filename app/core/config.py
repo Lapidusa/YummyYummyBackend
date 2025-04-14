@@ -7,7 +7,6 @@ class Settings(BaseSettings):
     SMS_API_URL: str = os.environ.get('SMS_API_URL')
     DATABASE_URL: str = os.environ.get('DATABASE_URL')
     JWT_SECRET_KEY: str = os.environ.get('JWT_SECRET_KEY')
-    SSL_CERTIFICATE: str = os.environ.get('SSL_CERTIFICATE')
     class Config:
         env_file = ".env"
 

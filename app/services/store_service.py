@@ -1,7 +1,8 @@
+from datetime import datetime
 from uuid import UUID
 from typing import List
 
-from asyncpg import Polygon
+from asyncpg import Polygon, Point
 from geoalchemy2.shape import from_shape
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,12 +38,16 @@ class StoreService:
       end_delivery_time=store_data.end_delivery_time,
       phone_number=store_data.phone_number,
       min_order_price= store_data.min_order_price,
-      city_id= store_data.city_id
+      city_id= store_data.city_id,
+      created_at = datetime.now(),
+      updated_at = datetime.now()
     )
     if store_data.area:
-      # Создаем полигон из координат
       polygon = Polygon(store_data.area)
-      new_store.area = from_shape(polygon, srid=4326)  # Укажите SRID, если необходимо
+      new_store.area = from_shape(polygon)
+    if store_data.point:
+      point = Point(store_data.point)
+      new_store.point = from_shape(point)
     db.add(new_store)
     await db.commit()
     await db.refresh(new_store)
@@ -58,7 +63,13 @@ class StoreService:
     store.start_delivery_time = store_data.start_delivery_time
     store.end_delivery_time = store_data.end_delivery_time
     store.phone_number = store_data.phone_number
-
+    store.updated_at = datetime.now()
+    if store_data.area:
+      polygon = Polygon(store_data.area)
+      store.area = from_shape(polygon)
+    if store_data.point:
+      point = Point(store_data.point)
+      store.point = from_shape(point)
     await db.commit()
     await db.refresh(store)
     return store
