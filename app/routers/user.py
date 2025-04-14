@@ -1,6 +1,4 @@
 from fastapi import APIRouter, Depends, Header
-from fastapi.security import OAuth2PasswordBearer
-from pyexpat.errors import messages
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.responsive import ResponseUtils
@@ -8,7 +6,7 @@ from app.services.sms_service import SmsService
 from app.services.user_service import UserService
 from app.core.security import SecurityMiddleware
 from sqlalchemy import select
-from app.db.models.user import User, Roles
+from app.db.models.user import User
 from pydantic import BaseModel
 from app.db.base import get_db
 
@@ -37,29 +35,28 @@ async def verify_code(request: VerifyCodeRequest, db: AsyncSession = Depends(get
     if not await UserService.check_users(db):
       new_user = await UserService.create_new_user(db, request.phone_number)
       token = await SecurityMiddleware.generate_jwt_token(str(new_user.id))
-      return {"user": new_user, "token": token}
+      return ResponseUtils.success(token = token, user = new_user)
 
     result = await db.execute(select(User).where(User.phone_number == request.phone_number))
     user = result.scalar_one_or_none()
 
     if user:
       token = await SecurityMiddleware.generate_jwt_token(str(user.id))
-      return {"user": user, "token": token}
+      return ResponseUtils.success(token = token, user = user)
     else:
       new_user = await UserService.create_new_user(db, request.phone_number)
       token = await SecurityMiddleware.generate_jwt_token(str(new_user.id))
-      return {"user": new_user, "token": token}
+      return ResponseUtils.success(token = token, user = new_user)
   return ResponseUtils.error(message="Неверный код или код истек")
 
 @router.get("/get-user/")
 async def get_user(token: str = Header(alias="token"), db: AsyncSession = Depends(get_db)):
   user = await SecurityMiddleware.get_current_user(token, db)
   if user:
-    return ResponseUtils.success(data=user)
+    return ResponseUtils.success(user=user)
   else:
     return ResponseUtils.error(message="Не найден пользователь")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @router.post("/logout/")
 async def logout_route(token: str = Header(alias="token"), db: AsyncSession = Depends(get_db)):
   user = await SecurityMiddleware.get_current_user(token, db)

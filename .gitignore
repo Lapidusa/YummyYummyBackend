@@ -3,3 +3,4 @@ MIGRATION.txt
 a.txt
 /migrations
 
+__pycache__/

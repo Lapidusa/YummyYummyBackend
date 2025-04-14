@@ -20,4 +20,4 @@ class Ingredient(Base):
     is_removable = Column(Boolean, nullable=False, default=True)  # Можно ли удалить ингредиент из состава
 
     # Связь с продуктами
-    products = relationship("Product", secondary=product_ingredients, back_populates="ingredients")
+    products = relationship("Pizza", secondary=product_ingredients, back_populates="ingredients")

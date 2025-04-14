@@ -11,18 +11,18 @@ from app.schemas.responsive import ResponseUtils
 
 
 class UserService:
-  async def validate_user_role(
-      token: str = Header(alias="token"),
-      db: AsyncSession = Depends(get_db)
-  ):
-    user = await SecurityMiddleware.get_current_user(token, db)
-    if not user:
-      return ResponseUtils.error(message="Пользователь не найден")
-
-    if user.role not in [Roles.ADMIN, Roles.MANAGER]:
-      return ResponseUtils.error(message="У вас недостаточно прав!")
-
-    return ResponseUtils.success(message="Доступ разрешен")
+  # async def validate_user_role(
+  #     token: str = Header(alias="token"),
+  #     db: AsyncSession = Depends(get_db)
+  # ):
+  #   user = await SecurityMiddleware.get_current_user(token, db)
+  #   if not user:
+  #     return ResponseUtils.error(message="Пользователь не найден")
+  #
+  #   if user.role not in [Roles.ADMIN, Roles.MANAGER]:
+  #     return ResponseUtils.error(message="У вас недостаточно прав!")
+  #
+  #   return ResponseUtils.success(message="Доступ разрешен")
 
   async def create_new_user(db: AsyncSession, phone_number: str) -> User:
     new_user = User(

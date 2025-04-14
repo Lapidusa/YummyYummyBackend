@@ -59,6 +59,11 @@ class Pizza(Product):
   ingredients = relationship("Ingredient", secondary=product_ingredients, back_populates="products")
   dough = Column(ENUM(Dough, name="dough", create_type=True), default=Dough.THICK_DOUGH, nullable=False)
 
+  @declared_attr
+  def ingredients(cls):
+    from app.db.models.ingredient import Ingredient
+    return relationship("Ingredient", secondary=product_ingredients, back_populates="products")
+
   __mapper_args__ = {
-    'polymorphic_identity': 'pizza',  # Указываем идентификатор для полиморфизма
+    'polymorphic_identity': 'pizza',
   }

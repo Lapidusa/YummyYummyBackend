@@ -11,9 +11,9 @@ class City(BaseModel):
   class Config:
     from_attributes = True
 
-class CityCreate(City):
+class CreateCity(City):
   pass
 
-class CityUpdate(City):
+class UpdateCity(City):
   id: UUID = Field(..., description="Уникальный идентификатор города")  # Уникальный идентификатор города
   pass

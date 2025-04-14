@@ -1,19 +1,21 @@
 from fastapi import Depends, APIRouter
+from fastapi.params import Header
 from sqlalchemy.exc import NoResultFound, IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
+
+from app.core.security import SecurityMiddleware
 from app.db.base import get_db
 from app.schemas.responsive import ResponseUtils
 from app.schemas.store import CreateStore, UpdateStore
 from app.services.store_service import StoreService
-from app.services.user_service import UserService
 router = APIRouter()
 
 @router.get("/get-store/{store_id}")
 async def get_store_endpoint(store_id: UUID, db: AsyncSession = Depends(get_db)):
   try:
     store = await StoreService.get_store_by_id(db, store_id)
-    return ResponseUtils.success(data=store, message="Магазин успешно создан")
+    return ResponseUtils.success(data=store)
   except NoResultFound:
     raise ResponseUtils.error(message="Нет найденного магазина")
 
@@ -26,10 +28,11 @@ async def get_all_stores_endpoint(db: AsyncSession = Depends(get_db)):
 async def create_store_endpoint(
   store_data: CreateStore,
   db: AsyncSession = Depends(get_db),
-  token: str = Depends(UserService.validate_user_role)
+  token: str = Header(None)
 ):
-  if not token.get("result"):
-    return ResponseUtils.error(message=token.get("message"))
+  if token is None:
+    raise ResponseUtils.error(message="Токен не предоставлен")
+  await SecurityMiddleware.is_admin_or_manager(token, db)
   try:
     new_store = await StoreService.create_store(db, store_data)
     return ResponseUtils.success(data=new_store, message="Магазин успешно создан")
@@ -44,10 +47,11 @@ async def create_store_endpoint(
 async def update_store_endpoint(
   store_data: UpdateStore,
   db: AsyncSession = Depends(get_db),
-  token: str = Depends(UserService.validate_user_role)
+  token: str = Header(None)
 ):
-  if not token.get("result"):
-    return token
+  if token is None:
+    raise ResponseUtils.error(message="Токен не предоставлен")
+  await SecurityMiddleware.is_admin_or_manager(token, db)
   try:
     updated_store = await StoreService.update_store(db, store_data)
     return ResponseUtils.success(data=updated_store, message="Магазин успешно изменен")
@@ -64,10 +68,11 @@ async def update_store_endpoint(
 async def delete_store_endpoint(
   store_id: UUID,
   db: AsyncSession = Depends(get_db),
-  token: str = Depends(UserService.validate_user_role)
+  token: str = Header(None)
 ):
-  if not token.get("result"):
-    return token
+  if token is None:
+    raise ResponseUtils.error(message="Токен не предоставлен")
+  await SecurityMiddleware.is_admin_or_manager(token, db)
   try:
     await StoreService.delete_store(db, store_id)
     return ResponseUtils.success(message="Магазин удален")

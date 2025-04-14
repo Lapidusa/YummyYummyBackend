@@ -4,11 +4,13 @@ from datetime import datetime, timedelta
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models.user import User
+from app.db.models.user import User, Roles
 from fastapi import HTTPException, APIRouter
 from sqlalchemy import select
 
 from app.core.config import settings
+from app.schemas.responsive import ResponseUtils
+
 TOKEN_BLACKLIST = set()
 router = APIRouter()
 
@@ -49,3 +51,32 @@ class SecurityMiddleware:
   async def logout(token: str):
     TOKEN_BLACKLIST.add(token)
     return {"message": "Токен успешно отозван"}
+
+  @staticmethod
+  async def is_manager(token: str, db: AsyncSession):
+    user = await SecurityMiddleware.get_current_user(token, db)
+    return user.role == Roles.MANAGER
+
+  @staticmethod
+  async def is_admin(token: str, db: AsyncSession):
+    user = await SecurityMiddleware.get_current_user(token, db)
+    if not user:
+      raise HTTPException(status_code=403, detail="Пользователь не найден")
+    if user.role != Roles.ADMIN:
+      raise HTTPException(status_code=403, detail="У вас недостаточно прав!")
+
+  @staticmethod
+  async def is_admin_or_manager(token: str, db: AsyncSession):
+    user = await SecurityMiddleware.get_current_user(token, db)
+    if not user:
+      raise HTTPException(status_code=403, detail="Пользователь не найден")
+    if user.role not in {Roles.ADMIN, Roles.MANAGER}:
+      raise HTTPException(status_code=403, detail="У вас недостаточно прав!")
+
+  @staticmethod
+  async def is_admin_or_courier(token: str, db: AsyncSession):
+    user = await SecurityMiddleware.get_current_user(token, db)
+    if not user:
+      raise HTTPException(status_code=403, detail="Пользователь не найден")
+    if user.role not in {Roles.ADMIN, Roles.COURIER}:
+      raise HTTPException(status_code=403, detail="У вас недостаточно прав!")
