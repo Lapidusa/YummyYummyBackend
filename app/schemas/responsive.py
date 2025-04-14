@@ -1,11 +1,15 @@
 from typing import Any, Optional
 
+from typing import Any, Optional
+
 class ResponseUtils:
     @staticmethod
-    def success(data: Optional[Any] = None, message: str = "Успешно") -> dict:
-        response = {"result": True, "message": message}
-        if data is not None:
-            response["data"] = data
+    def success(message: Optional[str] = None, **kwargs: Any) -> dict:
+        response = {"result": True}
+        if message:
+            response["message"] = message
+        if kwargs:
+            response.update(kwargs)
         return response
 
     @staticmethod
