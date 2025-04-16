@@ -9,7 +9,6 @@ from fastapi import HTTPException, APIRouter
 from sqlalchemy import select
 
 from app.core.config import settings
-from app.schemas.responsive import ResponseUtils
 
 TOKEN_BLACKLIST = set()
 router = APIRouter()
@@ -27,7 +26,6 @@ class SecurityMiddleware:
 
   @staticmethod
   async def get_current_user(token: str, db: AsyncSession):
-    # Проверяем, находится ли токен в черном списке
     if token in TOKEN_BLACKLIST:
       raise HTTPException(status_code=401, detail="Токен отозван")
 
@@ -37,7 +35,6 @@ class SecurityMiddleware:
       if user_id is None:
         raise HTTPException(status_code=401, detail="Недействительный токен")
 
-      # Проверяем, существует ли пользователь
       async with db as session:
         result = await session.execute(select(User).where(User.id == user_id))
         user = result.scalar_one_or_none()

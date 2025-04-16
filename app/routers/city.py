@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import SecurityMiddleware
 from app.db.base import get_db
 from app.schemas.city import CreateCity, UpdateCity
-from app.schemas.responsive import ResponseUtils
+from app.services.responsive import ResponseUtils
 from app.services.city_service import CityService
 router = APIRouter()
 
@@ -20,7 +20,7 @@ async def get_city(city_id: UUID, db: AsyncSession = Depends(get_db)):
   except NoResultFound:
     raise ResponseUtils.error(message=f"Нет найденного города с id {city_id}")
 
-@router.get("/all-categories/")
+@router.get("/all-cities/")
 async def get_all_city_endpoint(db: AsyncSession = Depends(get_db)):
   categories = await CityService.get_all_cities(db)
   return ResponseUtils.success(data=categories)
@@ -55,9 +55,9 @@ async def update_city(
   except Exception as e:
     raise ResponseUtils.error(message=str(e))
 
-@router.delete("/{category_id}")
+@router.delete("/{city_id}")
 async def delete_category_endpoint(
-  category_id: UUID,
+  city_id: UUID,
   db: AsyncSession = Depends(get_db),
   token: str = Header(None)
 ):
@@ -66,7 +66,7 @@ async def delete_category_endpoint(
   await SecurityMiddleware.is_admin_or_manager(token, db)
 
   try:
-    await CityService.delete_city(db, category_id)
+    await CityService.delete_city(db, city_id)
     return ResponseUtils.success(message="Город удален")
   except NoResultFound:
-    raise ResponseUtils.error(message=f"Город не найден с Id:{category_id}")
+    raise ResponseUtils.error(message=f"Город не найден с Id:{city_id}")

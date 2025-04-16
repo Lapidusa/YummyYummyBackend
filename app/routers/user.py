@@ -1,7 +1,10 @@
+import logging
+
+import redis
 from fastapi import APIRouter, Depends, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.responsive import ResponseUtils
+from app.services.responsive import ResponseUtils
 from app.services.sms_service import SmsService
 from app.services.user_service import UserService
 from app.core.security import SecurityMiddleware
@@ -12,7 +15,7 @@ from app.db.base import get_db
 
 sms_service = SmsService()
 router = APIRouter()
-
+redis_client = redis.Redis(host='127.0.0.1', port=6379, db=0)
 class RegisterOrLoginRequest(BaseModel):
   phone_number: str
 
@@ -20,35 +23,57 @@ class VerifyCodeRequest(BaseModel):
   phone_number: str
   code: str
 
+logging.basicConfig(filename="logs/app.log", level=logging.INFO, format="%(asctime)s:%(levelname)s:%(message)s")
+logger = logging.getLogger(__name__)
 @router.post("/send-sms/")
 async def send_sms(request: RegisterOrLoginRequest):
+  print("sdasdsadsad")
+  logger.info("ААААААААААААААААА")
   response = await sms_service.send_sms(request.phone_number)
+
   if response is None:
-    return ResponseUtils.error(message="Ошибка при отправке SMS")
-  return ResponseUtils.success(message="SMS отправлено успешно")
+    raise ResponseUtils.error(message="Ошибка при отправке SMS")
+
+  return ResponseUtils.success(message="SMS отправлен успешно")
+
+
+# Обработчик проверки кода подтверждения
 @router.post("/verify-code/")
 async def verify_code(request: VerifyCodeRequest, db: AsyncSession = Depends(get_db)):
-  sms_code = sms_service.get_sms_code(request.phone_number)
-  if sms_code and sms_code.is_valid(request.code):
-    sms_service.delete_sms_code(request.phone_number)
 
-    if not await UserService.check_users(db):
-      new_user = await UserService.create_new_user(db, request.phone_number)
-      token = await SecurityMiddleware.generate_jwt_token(str(new_user.id))
-      return ResponseUtils.success(token = token, user = new_user)
+  stored_code = redis_client.get(request.phone_number)
 
-    result = await db.execute(select(User).where(User.phone_number == request.phone_number))
-    user = result.scalar_one_or_none()
+  if stored_code and stored_code.decode('utf-8') == request.code:
+    await redis_client.delete(request.phone_number)
 
-    if user:
-      token = await SecurityMiddleware.generate_jwt_token(str(user.id))
-      return ResponseUtils.success(token = token, user = user)
+    existing_user = await UserService.get_user_by_phone(db, request.phone_number)
+
+    if existing_user:
+      token = await SecurityMiddleware.generate_jwt_token(str(existing_user.id))
+
+      return ResponseUtils.success(
+        token=token,
+        user={
+          "id": existing_user.id,
+          "phone_number": existing_user.phone_number
+        },
+        message="Авторизация прошла успешно"
+      )
     else:
+      # Новый пользователь, создаём запись
       new_user = await UserService.create_new_user(db, request.phone_number)
       token = await SecurityMiddleware.generate_jwt_token(str(new_user.id))
-      return ResponseUtils.success(token = token, user = new_user)
-  return ResponseUtils.error(message="Неверный код или код истек")
 
+      return ResponseUtils.success(
+        token=token,
+        user={
+          "id": new_user.id,
+          "phone_number": new_user.phone_number
+        },
+        message="Новый пользователь зарегистрирован успешно"
+      )
+  else:
+    raise ResponseUtils.error(message="Неверный код или срок действия кода истёк")
 @router.get("/get-user/")
 async def get_user(token: str = Header(alias="token"), db: AsyncSession = Depends(get_db)):
   user = await SecurityMiddleware.get_current_user(token, db)

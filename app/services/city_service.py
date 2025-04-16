@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import City as CityModel, City
 from app.schemas.city import CreateCity, UpdateCity
-from app.schemas.responsive import ResponseUtils
+from app.services.responsive import ResponseUtils
 
 db: AsyncSession
 class CityService:

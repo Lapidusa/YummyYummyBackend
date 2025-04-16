@@ -2,5 +2,9 @@
 MIGRATION.txt
 a.txt
 /migrations
-
+*.pyc
 __pycache__/
+/__pycache__
+/app/routers/__pycache__
+
+__pycache__/main.cpython-313.pyc

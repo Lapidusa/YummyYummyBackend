@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.schemas.category import Category, CreateCategory, UpdateCategory
 from app.db.models import Category as CategoryModel
-from app.schemas.responsive import ResponseUtils
+from app.services.responsive import ResponseUtils
 
 class CategoryService:
   @staticmethod

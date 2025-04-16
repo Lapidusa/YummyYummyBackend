@@ -6,8 +6,8 @@ from uuid import UUID
 
 from app.core.security import SecurityMiddleware
 from app.db.base import get_db
-from app.schemas.responsive import ResponseUtils
-from app.schemas.store import CreateStore, UpdateStore
+from app.services.responsive import ResponseUtils
+from app.schemas.store import UpdateStore, CreateStore
 from app.services.store_service import StoreService
 router = APIRouter()
 
@@ -22,7 +22,7 @@ async def get_store_endpoint(store_id: UUID, db: AsyncSession = Depends(get_db))
 @router.get("/all-stores/")
 async def get_all_stores_endpoint(db: AsyncSession = Depends(get_db)):
   stores = await StoreService.get_all_stores(db)
-  return stores
+  return ResponseUtils.success(stores=stores)
 
 @router.post("/create-store/")
 async def create_store_endpoint(

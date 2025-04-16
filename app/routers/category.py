@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import SecurityMiddleware
 from app.db.base import get_db
 from app.schemas.category import CreateCategory, UpdateCategory
-from app.schemas.responsive import ResponseUtils
+from app.services.responsive import ResponseUtils
 from app.services.category_service import CategoryService
 
 router = APIRouter()
@@ -25,7 +25,7 @@ async def get_category_endpoint (
 @router.get("/all-categories/")
 async def get_all_stores_endpoint(db: AsyncSession = Depends(get_db)):
   categories = await CategoryService.get_all_categories(db)
-  return ResponseUtils.success(data=categories)
+  return ResponseUtils.success(categories=categories)
 @router.post("/")
 async def create_category(
   category_data: CreateCategory,
